@@ -7,6 +7,7 @@ use app\models\Pengkajian;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\data\ActiveDataProvider;
+use Mpdf\Mpdf;
 
 class PengkajianController extends Controller
 {
@@ -27,15 +28,6 @@ class PengkajianController extends Controller
         ]);
     }
 
-    /**
-     * Displays a single Pengkajian model
-     */
-    public function actionView($id)
-    {
-        return $this->render('view', [
-            'model' => $this->findModel($id),
-        ]);
-    }
 
     /**
      * Creates a new Pengkajian model
@@ -44,25 +36,32 @@ class PengkajianController extends Controller
     public function actionCreate($id_registrasi = null)
     {
         $model = new Pengkajian();
-
+    
+        $model->id_form = 1;
         $model->tanggal_pengkajian = date('Y-m-d');
         $model->jam_pengkajian = date('H:i');
-        // If coming from Registrasi page
+        $model->poliklinik = 'Klinik Obgyn';
+    
         if ($id_registrasi !== null) {
             $model->id_registrasi = $id_registrasi;
         }
-
+    
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
-
+    
             Yii::$app->session->setFlash('success', 'Pengkajian berhasil disimpan.');
-
-            return $this->redirect(['view', 'id' => $model->id]);
+    
+            // Redirect ke halaman view (BUKAN create lagi)
+            return $this->redirect([
+                'view',
+                'id_form_data' => $model->id_form_data
+            ]);
         }
-
+    
         return $this->render('create', [
             'model' => $model,
         ]);
     }
+    
 
     /**
      * Updates an existing Pengkajian model
@@ -106,4 +105,45 @@ class PengkajianController extends Controller
 
         throw new NotFoundHttpException('Data tidak ditemukan.');
     }
+
+ 
+
+    public function actionPrint($id_registrasi)
+    {
+        $model = Pengkajian::find()
+            ->where(['id_registrasi' => $id_registrasi])
+            ->one();
+
+        if (!$model) {
+            throw new \yii\web\NotFoundHttpException('Data tidak ditemukan.');
+        }
+
+        $content = $this->renderPartial('print', [
+            'model' => $model,
+        ]);
+
+        $mpdf = new Mpdf([
+            'format' => 'A4',
+            'orientation' => 'P'
+        ]);
+
+        $mpdf->WriteHTML($content);
+
+        return $mpdf->Output('Pengkajian-'.$model->id_registrasi.'.pdf', 'I');
+    }
+
+    public function actionView($id_form_data)
+    {
+        $model = Pengkajian::findOne($id_form_data);
+
+        if (!$model) {
+            throw new NotFoundHttpException('Data tidak ditemukan.');
+        }
+
+        return $this->render('view', [
+            'model' => $model,
+        ]);
+    }
+
+
 }

@@ -2,7 +2,6 @@
 
 use yii\helpers\Html;
 use yii\helpers\Url;
-use app\widgets\Alert;
 
 $this->registerCsrfMetaTags();
 ?>
@@ -15,13 +14,7 @@ $this->registerCsrfMetaTags();
 
     <title><?= Html::encode($this->title) ?></title>
 
-    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- Toastr CSS -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet"/>
-
-    <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
 
     <?php $this->head() ?>
@@ -63,6 +56,11 @@ $this->registerCsrfMetaTags();
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="<?= Url::to(['/registrasi/index']) ?>">
+                            <i class="fa fa-file"></i> Form
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <?= Html::beginForm(['/site/logout'], 'post') ?>
                         <?= Html::submitButton(
                             '<i class="fa fa-sign-out-alt"></i> Logout (' . Yii::$app->user->identity->username . ')',
@@ -79,51 +77,45 @@ $this->registerCsrfMetaTags();
     </div>
 </nav>
 
-<!-- CONTENT -->
+
 <div class="container mt-4">
-
-    <?= Alert::widget() ?>
-
     <?= $content ?>
-
 </div>
 
-<!-- FOOTER -->
 <footer class="bg-light text-center py-3 mt-5">
-    <small>
-        &copy; <?= date('Y') ?> Muhammad Sayuti
-    </small>
+    <small>&copy; <?= date('Y') ?> Muhammad Sayuti</small>
 </footer>
 
-<!-- JS -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+<?php
+$success = Yii::$app->session->getFlash('success');
+$error = Yii::$app->session->getFlash('error');
 
-<script>
-$(document).ready(function(){
+if ($success) {
+    $this->registerJs("
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil!',
+            text: '$success',
+            timer: 2000,
+            showConfirmButton: false
+        });
+    ");
+}
 
-    toastr.options = {
-        closeButton: true,
-        progressBar: true,
-        positionClass: "toast-top-right",
-        timeOut: "3000"
-    };
-
-    <?php if (Yii::$app->session->hasFlash('success')): ?>
-        toastr.success("<?= Yii::$app->session->getFlash('success') ?>");
-    <?php endif; ?>
-
-    <?php if (Yii::$app->session->hasFlash('error')): ?>
-        toastr.error("<?= Yii::$app->session->getFlash('error') ?>");
-    <?php endif; ?>
-
-});
-</script>
+if ($error) {
+    $this->registerJs("
+        Swal.fire({
+            icon: 'error',
+            title: 'Error!',
+            text: '$error'
+        });
+    ");
+}
+?>
 
 <?php $this->endBody() ?>
 </body>

@@ -33,6 +33,12 @@ class Registrasi extends \yii\db\ActiveRecord
         return 'registrasi';
     }
 
+    public static function primaryKey()
+    {
+        return ['id_registrasi'];
+    }
+
+
     /**
      * {@inheritdoc}
      */
@@ -53,7 +59,7 @@ class Registrasi extends \yii\db\ActiveRecord
     public function attributeLabels()
     {
         return [
-            'id_registrasi' => 'Id Registrasi',
+            'id_registrasi' => 'ID Registrasi',
             'no_registrasi' => 'No Registrasi',
             'no_rekam_medis' => 'No Rekam Medis',
             'nama_pasien' => 'Nama Pasien',

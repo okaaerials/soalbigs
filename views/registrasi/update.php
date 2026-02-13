@@ -6,17 +6,23 @@ use yii\widgets\ActiveForm;
 /** @var yii\web\View $this */
 /** @var app\models\Registrasi $model */
 
-$this->title = 'Tambah Registrasi';
+$this->title = 'Edit Registrasi';
 ?>
 
 <div class="container mt-4">
 
     <div class="card shadow">
         <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">Form Registrasi</h5>
+            <h5 class="mb-0">Form Edit Registrasi</h5>
         </div>
 
         <div class="card-body">
+
+            <?php if (Yii::$app->session->hasFlash('success')): ?>
+                <div class="alert alert-success">
+                    <?= Yii::$app->session->getFlash('success') ?>
+                </div>
+            <?php endif; ?>
 
             <?php $form = ActiveForm::begin([
                 'id' => 'registrasi-form',
@@ -30,25 +36,33 @@ $this->title = 'Tambah Registrasi';
             ]); ?>
 
             <div class="mb-3">
-                <?= $form->field($model, 'no_registrasi')
+                <?= $form->field($model, 'id_registrasi')
                     ->textInput([
-                        'maxlength' => 8,
-                        'class' => 'form-control w-25',
-                        'oninput' => 'this.value=this.value.replace(/[^0-9]/g,"")'
+                        'value' => str_pad($model->id_registrasi, 8, '0', STR_PAD_LEFT),
+                        'readonly' => true,
+                        'class' => 'form-control w-25'
                     ]) ?>
             </div>
+
+
 
             <div class="mb-3">
                 <?= $form->field($model, 'no_rekam_medis')
                     ->textInput([
                         'maxlength' => 8,
+                        'placeholder' => 'Masukkan Nomor Rekam Medis Pasien',
                         'class' => 'form-control w-25',
+                        'type' => 'text',
                         'oninput' => 'this.value=this.value.replace(/[^0-9]/g,"")'
                     ]) ?>
             </div>
 
             <div class="mb-3">
-                <?= $form->field($model, 'nama_pasien')->textInput(['maxlength' => true]) ?>
+                <?= $form->field($model, 'nama_pasien')
+                    ->textInput([
+                        'maxlength' => true,
+                        'placeholder' => 'Masukkan Nama Pasien'
+                    ]) ?>
             </div>
 
             <div class="mb-3">
@@ -68,14 +82,19 @@ $this->title = 'Tambah Registrasi';
                 <?= $form->field($model, 'nik')
                     ->textInput([
                         'maxlength' => 16,
+                        'placeholder' => 'Masukkan NIK Pasien',
                         'class' => 'form-control w-25',
+                        'type' => 'text',
                         'oninput' => 'this.value=this.value.replace(/[^0-9]/g,"")'
                     ]) ?>
             </div>
 
             <div class="d-flex justify-content-between">
                 <?= Html::a('Kembali', ['index'], ['class' => 'btn btn-secondary']) ?>
-                <?= Html::submitButton('Simpan', ['class' => 'btn btn-success']) ?>
+
+                <?= Html::submitButton('Update', [
+                    'class' => 'btn btn-warning'
+                ]) ?>
             </div>
 
             <?php ActiveForm::end(); ?>
@@ -85,8 +104,10 @@ $this->title = 'Tambah Registrasi';
 </div>
 
 <?php
+// JS Bootstrap validation
 $this->registerJs("
 (function () {
+    'use strict'
     const form = document.getElementById('registrasi-form');
     form.addEventListener('submit', function (event) {
         if (!form.checkValidity()) {

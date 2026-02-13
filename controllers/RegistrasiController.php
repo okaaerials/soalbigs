@@ -30,14 +30,14 @@ class RegistrasiController extends Controller
      */
     public function actionIndex()
     {
-        $data = Registrasi::find()->all();
+        $data = Registrasi::find()
+            ->orderBy(['id_registrasi' => SORT_DESC])
+            ->all();
 
         return $this->render('index', [
             'data' => $data,
         ]);
     }
-
-    
 
     /**
      * CREATE
@@ -49,6 +49,7 @@ class RegistrasiController extends Controller
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
 
             Yii::$app->session->setFlash('success', 'Data registrasi berhasil disimpan.');
+
 
             return $this->redirect(['index']);
         }
@@ -94,8 +95,6 @@ class RegistrasiController extends Controller
     {
         $this->findModel($id_registrasi)->delete();
 
-        Yii::$app->session->setFlash('success', 'Data registrasi berhasil dihapus.');
-
         return $this->redirect(['index']);
     }
 
@@ -104,7 +103,7 @@ class RegistrasiController extends Controller
      */
     protected function findModel($id_registrasi)
     {
-        if (($model = Registrasi::findOne(['id_registrasi' => $id_registrasi])) !== null) {
+        if (($model = Registrasi::findOne($id_registrasi)) !== null) {
             return $model;
         }
 

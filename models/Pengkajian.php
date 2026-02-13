@@ -9,13 +9,13 @@ use yii\db\Expression;
 class Pengkajian extends ActiveRecord
 {
     /* =========================================
-     * VIRTUAL ATTRIBUTES (SEMUA FIELD FORM)
+     * VIRTUAL ATTRIBUTES (FIELD FORM)
      * ========================================= */
 
     public $tanggal_pengkajian;
     public $jam_pengkajian;
     public $poliklinik;
-    public $cara_masuk;
+    public $cara_masuk = [];
     public $anamnesis;
     public $diperoleh;
     public $hubungan;
@@ -44,10 +44,14 @@ class Pengkajian extends ActiveRecord
     public $riwayat_penyakit_keluarga;
     public $riwayat_operasi;
     public $operasi_apa;
-    public $kapan_dioperasi;
+    public $kapan_di_operasi;
     public $riwayat_pernah_dirawat_di_rs;
     public $penyakit_apa;
     public $kapan_dirawat_di_rs;
+    
+
+    /* ===== TAMBAHAN RESIKO JATUH ===== */
+
     public $resiko1;
     public $resiko2;
     public $resiko3;
@@ -55,7 +59,6 @@ class Pengkajian extends ActiveRecord
     public $resiko5;
     public $resiko6;
     public $total_resiko;
-
 
     /* ========================================= */
 
@@ -73,27 +76,21 @@ class Pengkajian extends ActiveRecord
             [['id_form', 'id_registrasi', 'create_by', 'update_by'], 'integer'],
             [['is_delete'], 'boolean'],
             [['create_time_at', 'update_time_at'], 'safe'],
-
-            // JSON column
             [['data'], 'safe'],
 
-            // Semua field form otomatis safe
-            [array_keys($this->getJsonAttributes()), 'safe'],
-
-            [['id_registrasi'], 'exist',
-                'skipOnError' => true,
-                'targetClass' => Registrasi::class,
-                'targetAttribute' => ['id_registrasi' => 'id_registrasi']
-            ],
+            // semua virtual attribute safe
+            [$this->getJsonAttributes(), 'safe'],
         ];
     }
 
     /* =========================================
-     * LIST FIELD YANG MASUK JSON
+     * LIST ATTRIBUTE MASUK JSON
      * ========================================= */
     protected function getJsonAttributes()
     {
         return [
+
+            // FORM DATA
             'tanggal_pengkajian',
             'jam_pengkajian',
             'poliklinik',
@@ -130,31 +127,47 @@ class Pengkajian extends ActiveRecord
             'riwayat_pernah_dirawat_di_rs',
             'penyakit_apa',
             'kapan_dirawat_di_rs',
+
+            // ===== RESIKO JATUH =====
+            'resiko1',
+            'resiko2',
+            'resiko3',
+            'resiko4',
+            'resiko5',
+            'resiko6',
+            'total_resiko',
         ];
     }
 
     /* =========================================
-     * AFTER FIND → Decode JSON otomatis
+     * AFTER FIND → DECODE JSON
      * ========================================= */
     public function afterFind()
     {
         parent::afterFind();
 
         if (!empty($this->data)) {
+
             $json = json_decode($this->data, true);
 
             if (is_array($json)) {
+
                 foreach ($json as $key => $value) {
+
                     if (property_exists($this, $key)) {
                         $this->$key = $value;
                     }
                 }
             }
         }
+
+        if (!is_array($this->cara_masuk)) {
+            $this->cara_masuk = [];
+        }
     }
 
     /* =========================================
-     * BEFORE SAVE → Encode otomatis semua field
+     * BEFORE SAVE → ENCODE JSON
      * ========================================= */
     public function beforeSave($insert)
     {
@@ -165,12 +178,19 @@ class Pengkajian extends ActiveRecord
         $jsonData = [];
 
         foreach ($this->getJsonAttributes() as $attribute) {
-            $jsonData[$attribute] = $this->$attribute;
+
+            $value = $this->$attribute;
+
+            if (is_array($value)) {
+                $jsonData[$attribute] = array_values($value);
+            } else {
+                $jsonData[$attribute] = $value ?? null;
+            }
         }
 
-        $this->data = json_encode($jsonData);
+        $this->data = json_encode($jsonData, JSON_UNESCAPED_UNICODE);
 
-        // Audit
+        // ===== AUDIT =====
         if (!Yii::$app->user->isGuest) {
 
             if ($this->isNewRecord) {
@@ -190,6 +210,8 @@ class Pengkajian extends ActiveRecord
      * ========================================= */
     public function getRegistrasi()
     {
-        return $this->hasOne(Registrasi::class, ['id_registrasi' => 'id_registrasi']);
+        return $this->hasOne(Registrasi::class, [
+            'id_registrasi' => 'id_registrasi'
+        ]);
     }
 }
